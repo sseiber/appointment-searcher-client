@@ -1,7 +1,7 @@
 {
     "name": "appointment-searcher-client",
     "version": "3.0.4",
-    "description": "LoopBox local client",
+    "description": "Appointment searcher client",
     "main": "index.ts",
     "config": {
         "imageName": "sseiber.azurecr.io/appointment-searcher-client"

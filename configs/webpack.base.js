@@ -102,7 +102,7 @@ module.exports = (context) => {
         plugins: [
             // Generate index.html in /client_dist => https://github.com/ampedandwired/html-webpack-plugin
             new HtmlWebpackPlugin({
-                title: 'LoopBox Local Client',
+                title: 'Appointment Searcher Client',
                 template: path.resolve(context, './src/index.html'),
                 hash: true
             }),

@@ -25,28 +25,28 @@ module.exports = () => {
         proxy: [
             {
                 path: '/favicon.ico',
-                target: 'http://localhost:8084',
+                target: 'http://localhost:9072',
                 xfwd: true,
                 secure: false,
                 changeOrigin: true
             },
             {
                 path: '/favicons/**',
-                target: 'http://localhost:8084',
+                target: 'http://localhost:9072',
                 xfwd: true,
                 secure: false,
                 changeOrigin: true
             },
             {
                 path: '/static/**',
-                target: 'http://localhost:8084',
+                target: 'http://localhost:9072',
                 xfwd: true,
                 secure: false,
                 changeOrigin: true
             },
             {
                 path: '/api/v1/search/**',
-                target: 'http://localhost:8084',
+                target: 'http://localhost:9072',
                 xfwd: true,
                 secure: false,
                 changeOrigin: true

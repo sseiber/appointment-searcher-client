@@ -8,8 +8,8 @@ export class HomePage extends React.Component<any, any> {
                 <Grid.Row>
                     <Grid.Column>
                         <Message>
-                            <h2>LoopBox</h2>
-                            <p>Welcome to your LoopBox</p>
+                            <h2>Appointment Searcher Client</h2>
+                            <p>Welcome</p>
                         </Message>
                     </Grid.Column>
                 </Grid.Row>
