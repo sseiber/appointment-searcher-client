@@ -16,7 +16,7 @@ export class ErrorDialog extends React.Component<IErrorDialogProps, any> {
         } = this.props;
 
         return (
-            <Modal size="mini" open={errorStore.shouldShow}>
+            <Modal size={'mini'} open={errorStore.shouldShow}>
                 <Modal.Header>{errorStore.settings.title}</Modal.Header>
                 <Modal.Content>
                     <Form>

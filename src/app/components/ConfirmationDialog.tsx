@@ -46,7 +46,7 @@ export class ConfirmationDialog extends React.Component<IConfirmationDialogProps
         } = this.state;
 
         return (
-            <Modal size="mini" open={visible} onClose={this.onCloseModal}>
+            <Modal size={'mini'} open={visible} onClose={this.onCloseModal}>
                 <Modal.Header>{title}</Modal.Header>
                 <Modal.Content>
                     {message}

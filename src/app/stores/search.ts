@@ -1,8 +1,8 @@
-import { observable, autorun, runInAction } from 'mobx';
+import { observable, runInAction } from 'mobx';
 import { DataStore, StoreEvents } from '.';
 import { EventEmitter2 } from 'eventemitter2';
 import { getSearchEndpointsApi, postSearchAppointmentsApi } from '../../api/Search';
-import { bind } from '../../utils';
+import { bind, sleep } from '../../utils';
 
 export interface ISearchEndpoint {
     id: string;
@@ -22,29 +22,35 @@ export interface ISearchResponse {
 export interface ISearchEndpointStatus {
     id: string;
     name: string;
+    description: string;
     endpoint: string;
+    selected: boolean;
     active: boolean;
     searching: boolean;
     appointments: number;
+    searchResponseMessage: string;
+    searchCount: number;
 }
 
 export class SearchStore implements DataStore {
     public static displayName = 'searchStore';
 
+    private alertSound = new Audio('/assets/alert.mp3');
+
     public settings = observable({
         loading: false,
-        requestInterval: 20
+        requestInterval: 5
     });
 
     public searchEndpoints = observable.array([] as ISearchEndpointStatus[]);
 
-    public async init() {
-        autorun(() => {
-            for (const foo of this.searchEndpoints) {
-                console.log(`Checkbox ${foo.id}: ${foo.active ? 'ON' : 'OFF'}`);
-            }
-        });
-    }
+    // public async init() {
+    //     autorun(() => {
+    //         for (const foo of this.searchEndpoints) {
+    //             console.log(`Checkbox ${foo.id}: ${foo.active ? 'ON' : 'OFF'}`);
+    //         }
+    //     });
+    // }
 
     public get isProduction() {
         return process.env.NODE_ENV === 'production';
@@ -73,10 +79,14 @@ export class SearchStore implements DataStore {
                         return {
                             id: endpoint.id,
                             name: endpoint.name,
+                            description: endpoint.description,
                             endpoint: endpoint.endpoint,
+                            selected: false,
                             active: false,
                             searching: false,
-                            appointments: 0
+                            appointments: 0,
+                            searchResponseMessage: '0 scans for appointments completed',
+                            searchCount: 0
                         }
                     }));
                 });
@@ -98,6 +108,19 @@ export class SearchStore implements DataStore {
         return succeeded;
     }
 
+    public startSearch(id: string): void {
+        const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
+        if (!endpoint) {
+            return;
+        }
+
+        runInAction(() => {
+            endpoint.active = true;
+        });
+
+        setTimeout(this.searchEndpoint, 1000, id);
+    }
+
     @bind
     public async searchEndpoint(id: string): Promise<void> {
         const startTicks = Date.now();
@@ -107,51 +130,77 @@ export class SearchStore implements DataStore {
             return;
         }
 
-        await this.searchAppointments(endpoint);
+        await this.searchAppointments(id);
+
+        if (endpoint.appointments) {
+            this.alertSound.play();
+
+            this.setEndpointActiveState(id, false);
+        }
 
         const timeout = (1000 * (this.settings.requestInterval)) - (Date.now() - startTicks)
 
+        await sleep(2000);
+
         if (endpoint.active) {
-            setTimeout(this.searchEndpoint, timeout > 0 ? timeout : 1000, this.searchEndpoint);
+            setTimeout(this.searchEndpoint, timeout > 0 ? timeout : 1000, id);
         }
     }
 
-    public getEndpointActiveState(id: string): boolean {
+    public getEndpointSelectedState(id: string): boolean {
         const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
 
-        return !!endpoint?.active;
+        return !!endpoint?.selected;
+    }
+
+    public async setEndpointSelectedState(id: string, selected: boolean): Promise<void> {
+        runInAction(() => {
+            const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
+            if (endpoint) {
+                endpoint.selected = selected;
+            }
+        });
     }
 
     public async setEndpointActiveState(id: string, active: boolean): Promise<void> {
         runInAction(() => {
             const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
             if (endpoint) {
-                console.log(`Current checkbox setting - ${endpoint.id}: ${endpoint.active ? 'ON' : 'OFF'}`);
-                console.log(`New checkbox setting - ${endpoint.id}: ${active ? 'ON' : 'OFF'}`);
                 endpoint.active = active;
-                console.log(`Post checkbox setting - ${endpoint.id}: ${endpoint.active ? 'ON' : 'OFF'}`);
             }
         });
     }
 
-    private async searchAppointments(searchEndpoint: ISearchEndpointStatus): Promise<boolean> {
+    private async searchAppointments(id: string): Promise<boolean> {
         let succeeded = false;
+
+        const searchEndpoint = this.searchEndpoints.find(endpoint => endpoint.id === id);
+        if (!searchEndpoint) {
+            return false;
+        }
 
         runInAction(() => {
             searchEndpoint.searching = true;
         });
 
         try {
-            const response = await postSearchAppointmentsApi(searchEndpoint);
-            if (response.succeeded) {
+            const response = await postSearchAppointmentsApi({
+                id
+            });
+
+            if (response.succeeded && response.body?.status) {
                 runInAction(() => {
                     const searchResponse = (response.body as ISearchResponse);
 
                     searchEndpoint.appointments = searchResponse.available;
+                    searchEndpoint.searchResponseMessage = `${++searchEndpoint.searchCount} scans for appointments completed`;
                 });
             }
             else {
-                this.emitError(response);
+                // this.emitError(response);
+                runInAction(() => {
+                    searchEndpoint.searchResponseMessage = 'Error while requesting appointments';
+                });
             }
 
             succeeded = response.succeeded;

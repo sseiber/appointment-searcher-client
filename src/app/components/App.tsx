@@ -21,7 +21,7 @@ export class AppComponent extends React.Component<IAppProps, {}> {
 
         return (
             <div>
-                <Menu fixed="top" inverted color="grey" style={{ padding: '0em 5em' }} />
+                <Menu fixed="top" inverted color={'grey'} style={{ padding: '0em 5em' }} />
                 <Grid style={{ padding: '5em 5em' }}>
                     <Grid.Row>
                         <Grid.Column>
@@ -35,7 +35,7 @@ export class AppComponent extends React.Component<IAppProps, {}> {
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
-                <Menu fixed="bottom" inverted color="grey" style={{ padding: '1em 5em' }} />
+                <Menu fixed="bottom" inverted color={'grey'} style={{ padding: '1em 5em' }} />
             </div >
         );
     }
