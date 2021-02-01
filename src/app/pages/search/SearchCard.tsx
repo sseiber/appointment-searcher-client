@@ -72,6 +72,12 @@ export class SearchCard extends React.Component<ISearchCardProps, any> {
             searchEndpoint
         } = this.props;
 
-        searchStore.setEndpointActiveState(searchEndpoint.id, !searchEndpoint.active);
+        const activeState = searchEndpoint.active;
+
+        searchStore.setEndpointActiveState(searchEndpoint.id, !activeState);
+
+        if (!activeState) {
+            searchStore.startSearch(searchEndpoint.id);
+        }
     }
 }
