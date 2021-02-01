@@ -171,6 +171,10 @@ export class SearchStore implements DataStore {
         });
     }
 
+    public async playAlertSound(): Promise<void> {
+        await this.alertSound.play();
+    }
+
     private async searchAppointments(id: string): Promise<boolean> {
         let succeeded = false;
 
