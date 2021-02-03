@@ -11,12 +11,18 @@ export interface ISearchEndpoint {
     endpoint: string;
 }
 
+export interface IOpenSlot {
+    date: string;
+    time: string;
+    dose: string;
+}
+
 export interface ISearchResponse {
     status: boolean;
     id: string;
     name: string;
     description: string;
-    available: number;
+    openSlots: IOpenSlot[];
 }
 
 export interface ISearchEndpointStatus {
@@ -27,10 +33,12 @@ export interface ISearchEndpointStatus {
     selected: boolean;
     active: boolean;
     searching: boolean;
-    appointments: number;
+    openSlots: IOpenSlot[];
     searchResponseMessage: string;
     searchCount: number;
 }
+
+const initialSearchResponseMessage = '0 scans for appointments completed';
 
 export class SearchStore implements DataStore {
     public static displayName = 'searchStore';
@@ -38,8 +46,7 @@ export class SearchStore implements DataStore {
     private alertSound = new Audio('/assets/alert.mp3');
 
     public settings = observable({
-        loading: false,
-        requestInterval: 5
+        loading: false
     });
 
     public searchEndpoints = observable.array([] as ISearchEndpointStatus[]);
@@ -84,8 +91,8 @@ export class SearchStore implements DataStore {
                             selected: false,
                             active: false,
                             searching: false,
-                            appointments: 0,
-                            searchResponseMessage: '0 scans for appointments completed',
+                            openSlots: [],
+                            searchResponseMessage: initialSearchResponseMessage,
                             searchCount: 0
                         }
                     }));
@@ -121,10 +128,22 @@ export class SearchStore implements DataStore {
         setTimeout(this.searchEndpoint, 1000, id);
     }
 
+    public stopSearch(id: string): void {
+        const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
+        if (!endpoint) {
+            return;
+        }
+
+        runInAction(() => {
+            endpoint.active = false;
+            endpoint.openSlots = [];
+            endpoint.searchResponseMessage = initialSearchResponseMessage;
+            endpoint.searchCount = 0;
+        });
+    }
+
     @bind
     public async searchEndpoint(id: string): Promise<void> {
-        const startTicks = Date.now();
-
         const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
         if (!endpoint) {
             return;
@@ -132,18 +151,16 @@ export class SearchStore implements DataStore {
 
         await this.searchAppointments(id);
 
-        if (endpoint.appointments) {
+        if (endpoint.openSlots.length > 0) {
             this.alertSound.play();
 
             this.setEndpointActiveState(id, false);
         }
 
-        const timeout = (1000 * (this.settings.requestInterval)) - (Date.now() - startTicks)
-
-        await sleep(2000);
+        await sleep(1000);
 
         if (endpoint.active) {
-            setTimeout(this.searchEndpoint, timeout > 0 ? timeout : 1000, id);
+            setTimeout(this.searchEndpoint, 10, id);
         }
     }
 
@@ -158,6 +175,10 @@ export class SearchStore implements DataStore {
             const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
             if (endpoint) {
                 endpoint.selected = selected;
+
+                if (!selected) {
+                    this.stopSearch(id);
+                }
             }
         });
     }
@@ -196,7 +217,7 @@ export class SearchStore implements DataStore {
                 runInAction(() => {
                     const searchResponse = (response.body as ISearchResponse);
 
-                    searchEndpoint.appointments = searchResponse.available;
+                    searchEndpoint.openSlots = searchResponse.openSlots;
                     searchEndpoint.searchResponseMessage = `${++searchEndpoint.searchCount} scans for appointments completed`;
                 });
             }

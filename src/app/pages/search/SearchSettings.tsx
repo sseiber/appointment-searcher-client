@@ -21,7 +21,7 @@ export class SearchSettings extends React.Component<ISearchSettingsProps, any> {
                     <Checkbox
                         id={endpoint.id}
                         label={endpoint.name}
-                        checked={this.getEndpointSelectedState(endpoint.id)}
+                        checked={searchStore.getEndpointSelectedState(endpoint.id)}
                         onChange={this.onSearchEndpointChecked}
                     />
                 </Form.Field>
@@ -41,15 +41,6 @@ export class SearchSettings extends React.Component<ISearchSettingsProps, any> {
                 </Segment>
             </div>
         );
-    }
-
-    private getEndpointSelectedState(id: string): boolean {
-        const {
-            searchStore
-        } = this.props;
-
-        const endpoint = searchStore.searchEndpoints.find(endpoint => endpoint.id === id);
-        return !!endpoint?.selected;
     }
 
     @bind
