@@ -52,6 +52,8 @@ export class SearchSettings extends React.Component<ISearchSettingsProps, any> {
 
         await searchStore.setEndpointSelectedState(e.target.id, e.target.checked);
 
-        searchStore.startSearch(e.target.id);
+        e.target.checked
+            ? searchStore.startSearch(e.target.id)
+            : searchStore.stopSearch(e.target.id);
     }
 }

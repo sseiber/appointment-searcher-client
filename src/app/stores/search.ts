@@ -175,10 +175,6 @@ export class SearchStore implements DataStore {
             const endpoint = this.searchEndpoints.find(endpoint => endpoint.id === id)
             if (endpoint) {
                 endpoint.selected = selected;
-
-                if (!selected) {
-                    this.stopSearch(id);
-                }
             }
         });
     }
